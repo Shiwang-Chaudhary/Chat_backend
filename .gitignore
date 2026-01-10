@@ -1,0 +1,8 @@
+# Ignore node modules
+node_modules/
+
+# Ignore dotenv and environment files
+.env
+*.env
+.env.*
+.envrc
