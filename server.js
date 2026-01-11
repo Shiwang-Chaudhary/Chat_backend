@@ -2,11 +2,13 @@ const express = require("express");
 const app = express();
 const port = 3000;
 const http = require("http");
-const { Server } = require("socket.io");
+// const { Server } = require("socket.io");
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
+// const io = new Server(server, { cors: { origin: "*" } });
 const authRoutes = require("./routes/auth.routes");
 const connectDB = require("./conifg/dbConnection");
+const chatRoutes = require("./routes/chat.routes");
+const initSocket = require("./conifg/socket"); 
 require('dotenv').config();
 
 
@@ -16,7 +18,10 @@ app.use(express.json());
 app.get("/", (req, res) => {
     res.send("Hello World!");
 });
-app.use("/auth",authRoutes);
+app.use("/auth", authRoutes);
+app.use('/chat', chatRoutes);
+
+initSocket(server);
 // io.on("connection", (socket) => {
 //     console.log("User connected:", socket.id);
 
