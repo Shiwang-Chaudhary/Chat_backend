@@ -41,7 +41,7 @@ initSocket(server);
 //     });
 //});
 
-
+//TEST COMMIT
 server.listen(port, () => {
     console.log(`Chat backend is running on port: ${port}`);
 });
