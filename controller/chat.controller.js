@@ -53,7 +53,7 @@ const getMessage = async (req, res) => {
             data: messages
         });
     } catch (error) {
-        res.status(500).json({ message: "Something went wrong.❌❌" });
+        res.status(500).json({ message: "Something went wrong❌❌" });
         console.error("GETMESSAGE error:", error);
     }
 };
