@@ -47,7 +47,7 @@ const getMessage = async (req, res) => {
     console.log("GET MESSAGE API HIT ✅✅");
     try {
         const { chatId } = req.params;
-        const messages = await Message.find({ chatId }).populate("sender", ["name", "email"]);
+        const messages = await Message.find({ chatId }).populate("sender", ["email"]);
         res.status(200).json({
             message: "Messages fetched",
             data: messages
@@ -73,4 +73,24 @@ const getAllChats = async(req,res)=>{
     }
 }
 
-module.exports = { createOrGetChat, sendMessage, getMessage, getAllChats };
+const searchUsers = async(req,res)=>{
+    console.log("SEARCH USERS API HIT ✅✅");
+    try {
+        const {query} = req.query;
+        const myId = req.user.id;
+        const users = await User.find({
+            _id:{$ne : myId},
+            name:{$regex:query,$options:"i"}
+        }).select("id name email");
+
+        res.status(200).json({
+            message: "Users fetched",
+            data: users
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Something went wrong.❌❌" });
+        console.error("SEARCH USERS error:", error);
+    }
+}
+
+module.exports = { createOrGetChat, sendMessage, getMessage, getAllChats, searchUsers };
