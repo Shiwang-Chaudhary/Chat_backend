@@ -41,11 +41,11 @@ const initSocket = async (server) => {
                     // roomId: chatId,
                     // content: text,
                     // createdAt: message.createdAt
-                    _id: message._id,        // 👈 match REST
-                    chatId: chatId,         // 👈 match REST
+                    _id: message._id,
+                    chatId: chatId,
                     content: text,
                     createdAt: message.createdAt,
-                    sender: {               // 👈 REQUIRED FOR UI
+                    sender: {
                         _id: senderId,
                         //name: socket.user.name || "",
                         email: socket.user.email || ""

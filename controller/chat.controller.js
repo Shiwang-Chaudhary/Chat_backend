@@ -1,12 +1,14 @@
 const Chat = require("../modles/chat.model");
 const Message = require("../modles/message.model");
+const User = require("../modles/user.model");
+const mongoose = require("mongoose");
 
 const createOrGetChat = async (req, res) => {
     // Logic for creating or getting a chat
     console.log("CreateOrGetChat API HIT ✅✅");
     try {
-        const { userId } = req.body;//other person userId (OTHER)
-        const myId = req.user.id;//logged user id (ME)
+        const { userId } = req.body; //other person userId (OTHER)
+        const myId = req.user.id; //logged user id (ME)
         let chat = await Chat.findOne({
             members: { $all: [myId, userId] }
         });
@@ -15,12 +17,38 @@ const createOrGetChat = async (req, res) => {
                 members: [myId, userId]
             });
         }
-        res.status(200).json({ Chat: chat, message: "Chat retrieved successfully. ✅✅" })
+        return res.status(200).json({ Chat: chat, message: "Chat retrieved successfully. ✅✅" })
     } catch (error) {
-        res.status(500).json({ message: "Something went wrong.❌❌" });
         console.error("CreateOrGetChat error:", error);
+        return res.status(500).json({ message: "Something went wrong.❌❌" });
     }
 };
+
+const createGroupChat = async (req, res) => {
+    console.log("createGroupChat API HIT ✅✅");
+    try {
+        const { name, members } = req.body;
+        if (!name || !members || members.length < 2) {
+            return res.status(400).json({
+        message: "Group name and at least 2 members required"
+      });
+        }
+        const myId = req.user.id;
+        const allMembers = [...new Set([...members, myId])];
+        const objectIds = allMembers.map(id => new mongoose.Types.ObjectId(id));
+        const chat = await Chat.create({
+            name,
+            isGroup: true,
+            admin: new mongoose.Types.ObjectId(myId),
+            members: objectIds
+        });
+        const responseData = await Chat.findById(chat._id).populate("members","name");
+        return res.status(200).json({ message : "Group created successfully ✅✅", data : responseData });
+    } catch (error) {
+        console.log(`Something went wrong: ${error}`);
+        return res.status(500).json({message:"Something went wrong ❌❌"});
+    }
+}
 
 const sendMessage = async (req, res) => {
     // Logic for sending a message
@@ -33,9 +61,7 @@ const sendMessage = async (req, res) => {
             sender: senderId,
             content
         });
-
-        res.status(200).json({ message: "Message sent successfully. ✅✅", data: message });
-
+        return res.status(200).json({ message: "Message sent successfully. ✅✅", data: message });
     } catch (error) {
         res.status(500).json({ message: "Something went wrong.❌❌" });
         console.error("SENDMESSAGE error:", error);
@@ -48,49 +74,64 @@ const getMessage = async (req, res) => {
     try {
         const { chatId } = req.params;
         const messages = await Message.find({ chatId }).populate("sender", ["email"]);
-        res.status(200).json({
+        return res.status(200).json({
             message: "Messages fetched",
             data: messages
         });
     } catch (error) {
-        res.status(500).json({ message: "Something went wrong❌❌" });
+        return res.status(500).json({ message: "Something went wrong❌❌" });
         console.error("GETMESSAGE error:", error);
     }
 };
 
-const getAllChats = async(req,res)=>{
+const getAllChats = async (req, res) => {
     console.log("GET ALL CHATS API HIT ✅✅");
     try {
         const loggedUser = req.user.id;
-        const chats = await Chat.find({members: loggedUser}).populate("members","name email").sort("-updatedAt");
-        res.status(200).json({
+        const {isGroup} = req.query;
+        const filter = {
+            members : loggedUser
+        }
+        if (isGroup === "true") {
+            filter.isGroup = true;
+        }else{
+            filter.isGroup = {$ne:true}; // $ne means not equal 
+            // and it give all the chats that are not true and it includes those chats as well where isGroup key doesn't even exist...
+            //and its better than just defining filter.isGroup = false
+        }
+        const chats = await Chat.find(filter).populate("members", "name email").populate("admin","name email").sort("-updatedAt");
+        return res.status(200).json({
             message: "Chats fetched",
             data: chats
         });
     } catch (error) {
-        res.status(500).json({ message: "Something went wrong.❌❌" });
         console.error("GETALLCHATS error:", error);
+        return res.status(500).json({ message: "Something went wrong.❌❌" });
     }
 }
 
-const searchUsers = async(req,res)=>{
+const searchUsers = async (req, res) => {
     console.log("SEARCH USERS API HIT ✅✅");
     try {
-        const {query} = req.query;
+        const { query } = req.query;
         const myId = req.user.id;
+        if (!query) {
+            return res.status(400).json({ message: "query is required" });
+
+        }
         const users = await User.find({
-            _id:{$ne : myId},
-            name:{$regex:query,$options:"i"}
+            _id: { $ne: myId },
+            name: { $regex: query, $options: "i" }
         }).select("id name email");
 
-        res.status(200).json({
+        return res.status(200).json({
             message: "Users fetched",
             data: users
         });
     } catch (error) {
-        res.status(500).json({ message: "Something went wrong.❌❌" });
+        return res.status(500).json({ message: "Something went wrong.❌❌" });
         console.error("SEARCH USERS error:", error);
     }
 }
 
-module.exports = { createOrGetChat, sendMessage, getMessage, getAllChats, searchUsers };
+module.exports = { createOrGetChat, sendMessage, getMessage, getAllChats, searchUsers, createGroupChat };
