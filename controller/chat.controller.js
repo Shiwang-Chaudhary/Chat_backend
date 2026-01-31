@@ -4,7 +4,6 @@ const User = require("../modles/user.model");
 const mongoose = require("mongoose");
 
 const createOrGetChat = async (req, res) => {
-    // Logic for creating or getting a chat
     console.log("CreateOrGetChat API HIT ✅✅");
     try {
         const { userId } = req.body; //other person userId (OTHER)
@@ -69,7 +68,6 @@ const sendMessage = async (req, res) => {
 };
 
 const getMessage = async (req, res) => {
-    // Logic for getting a message
     console.log("GET MESSAGE API HIT ✅✅");
     try {
         const { chatId } = req.params;
@@ -122,29 +120,37 @@ const searchUsers = async (req, res) => {
         const users = await User.find({
             _id: { $ne: myId },
             name: { $regex: `^${query}`, $options: "i" }
-        }).select("id name email");
+        }).select("id name email").sort({ updatedAt: -1 });
 
         return res.status(200).json({
             message: "Users fetched",
             data: users
         });
     } catch (error) {
-        return res.status(500).json({ message: "Something went wrong.❌❌" });
         console.error("SEARCH USERS error:", error);
+        return res.status(500).json({ message: "Something went wrong.❌❌" });
     }
 }
 const searchgroups = async (req, res) => {
     console.log("SearchGroups API HIT ✅✅")
-    const { query } = req.query;
-    const myId = req.user.id;
-    if (!query) {
-        return res.status(400).json({ message: "query is required" });
+    try {
+        const { query } = req.query;
+        const myId = req.user.id;
+        if (!query) {
+            return res.status(400).json({ message: "query is required" });
+        }
+        const groups = await Chat.find({
+            isGroup: true,
+            members: myId,
+            name: { $regex: `^${query}`, $options: "i" }
+        }).populate("admin", "name email").sort({ updatedAt: -1 });
+        res.status(200).json({message: "Users fetched",
+            data: groups});
+    } catch (error) {
+        console.error("SEARCH USERS error:", error);
+        return res.status(500).json({ message: "Something went wrong.❌❌" });
     }
-    const groups = await Chat.find({
-        
-        name : { $regex: `^${query}`, $options: "i" },
-        isGroup: true
-    });
+
 }
 
-module.exports = { createOrGetChat, sendMessage, getMessage, getAllChats, searchUsers, createGroupChat };
+module.exports = { createOrGetChat, sendMessage, getMessage, getAllChats, searchUsers, createGroupChat, searchgroups };
