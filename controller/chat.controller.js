@@ -30,8 +30,8 @@ const createGroupChat = async (req, res) => {
         const { name, members } = req.body;
         if (!name || !members || members.length < 2) {
             return res.status(400).json({
-        message: "Group name and at least 2 members required"
-      });
+                message: "Group name and at least 2 members required"
+            });
         }
         const myId = req.user.id;
         const allMembers = [...new Set([...members, myId])];
@@ -42,11 +42,11 @@ const createGroupChat = async (req, res) => {
             admin: new mongoose.Types.ObjectId(myId),
             members: objectIds
         });
-        const responseData = await Chat.findById(chat._id).populate("members","name");
-        return res.status(200).json({ message : "Group created successfully ✅✅", data : responseData });
+        const responseData = await Chat.findById(chat._id).populate("members", "name");
+        return res.status(200).json({ message: "Group created successfully ✅✅", data: responseData });
     } catch (error) {
         console.log(`Something went wrong: ${error}`);
-        return res.status(500).json({message:"Something went wrong ❌❌"});
+        return res.status(500).json({ message: "Something went wrong ❌❌" });
     }
 }
 
@@ -88,18 +88,18 @@ const getAllChats = async (req, res) => {
     console.log("GET ALL CHATS API HIT ✅✅");
     try {
         const loggedUser = req.user.id;
-        const {isGroup} = req.query;
+        const { isGroup } = req.query;
         const filter = {
-            members : loggedUser
+            members: loggedUser
         }
         if (isGroup === "true") {
             filter.isGroup = true;
-        }else{
-            filter.isGroup = {$ne:true}; // $ne means not equal 
+        } else {
+            filter.isGroup = { $ne: true }; // $ne means not equal 
             // and it give all the chats that are not true and it includes those chats as well where isGroup key doesn't even exist...
             //and its better than just defining filter.isGroup = false
         }
-        const chats = await Chat.find(filter).populate("members", "name email").populate("admin","name email").sort("-updatedAt");
+        const chats = await Chat.find(filter).populate("members", "name email").populate("admin", "name email").sort("-updatedAt");
         return res.status(200).json({
             message: "Chats fetched",
             data: chats
@@ -121,7 +121,7 @@ const searchUsers = async (req, res) => {
         }
         const users = await User.find({
             _id: { $ne: myId },
-            name: { $regex: query, $options: "i" }
+            name: { $regex: `^${query}`, $options: "i" }
         }).select("id name email");
 
         return res.status(200).json({
@@ -132,6 +132,19 @@ const searchUsers = async (req, res) => {
         return res.status(500).json({ message: "Something went wrong.❌❌" });
         console.error("SEARCH USERS error:", error);
     }
+}
+const searchgroups = async (req, res) => {
+    console.log("SearchGroups API HIT ✅✅")
+    const { query } = req.query;
+    const myId = req.user.id;
+    if (!query) {
+        return res.status(400).json({ message: "query is required" });
+    }
+    const groups = await Chat.find({
+        
+        name : { $regex: `^${query}`, $options: "i" },
+        isGroup: true
+    });
 }
 
 module.exports = { createOrGetChat, sendMessage, getMessage, getAllChats, searchUsers, createGroupChat };
