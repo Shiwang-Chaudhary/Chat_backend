@@ -14,9 +14,26 @@ const initSocket = async (server) => {
         console.log("User connected:", socket.id);
 
         //JOINING ROOM
-        socket.on("joinroom", (chatId) => {
-            socket.join(chatId);
-            console.log(`User ${socket.id} joined room ${chatId}`);
+        socket.on("joinroom", async (chatId) => {
+            try {
+                const userId = socket.user.id;
+                const chat = await Chat.findById(chatId);
+                if (!chat) {
+                    return socket.emit("Error", "Chat not found");
+                }
+                const isMember = chat.members.some((member) => member.toString() === userId);
+                if (!isMember) {
+                    return socket.emit(
+                        "chat_error",
+                        "You are not a member of this chat"
+                    );
+                }
+                socket.join(chatId);
+                console.log(`User ${socket.id} joined room ${chatId}`);
+            } catch (error) {
+                socket.emit("chat_error", "Failed to join room");
+            }
+
         });
 
         //SENDING MESSAGE
@@ -25,11 +42,14 @@ const initSocket = async (server) => {
             try {
                 const { chatId, text } = data;
                 const senderId = socket.user.id;
-
+                if (!text || !chatId) {
+                    return socket.emit("message_error", "Invalid message data");
+                }
                 const chat = await Chat.findById(chatId);
                 if (!chat) {
                     return socket.emit('chat_error', 'Chat not found');
                 }
+                const isMember = await Chat.member.some((member)=>member.toString()===senderId.toString());
                 const message = await Message.create({
                     chatId,
                     sender: senderId,
@@ -37,10 +57,6 @@ const initSocket = async (server) => {
                 });
                 //EMITTING MESSAGE
                 io.to(chatId).emit("receiveMessage", {
-                    //id: message.id,
-                    // roomId: chatId,
-                    // content: text,
-                    // createdAt: message.createdAt
                     _id: message._id,
                     chatId: chatId,
                     content: text,
