@@ -71,14 +71,15 @@ const getMessage = async (req, res) => {
     console.log("GET MESSAGE API HIT ✅✅");
     try {
         const { chatId } = req.params;
-        const messages = await Message.find({ chatId }).populate("sender", ["email"]);
+        const messages = await Message.find({ chatId }).populate("sender", "name email");
+        console.log("Message schema",messages);
         return res.status(200).json({
             message: "Messages fetched",
             data: messages
         });
     } catch (error) {
-        return res.status(500).json({ message: "Something went wrong❌❌" });
         console.error("GETMESSAGE error:", error);
+        return res.status(500).json({ message: "Something went wrong❌❌" });
     }
 };
 
