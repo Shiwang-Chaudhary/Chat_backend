@@ -41,11 +41,13 @@ const initSocket = async (server) => {
             //NOTE THAT ChatId and roomId means same here
             console.log("SEND MESSAGE SOCKET CALLED ✅✅")
             try {
-                const { chatId, text } = data;
+                const { chatId, text, messageType, fileName, fileUrl, fileSize } = data;
                 const senderId = socket.user.id;
-                if (!text || !chatId) {
-                    console.log("Message error");
-                    return socket.emit("message_error", "Invalid message data");
+                if (messageType==="text" && !text) {
+                    return socket.emit("message_error", "Text message cannot be empty");
+                }
+                if (messageType==="file" && (!fileSize || !fileUrl)) {
+                    return socket.emit("message_error", "File URL and File Size are required for file messages");
                 }
                 const chat = await Chat.findById(chatId);
                 if (!chat) {
@@ -60,7 +62,11 @@ const initSocket = async (server) => {
                 const message = await Message.create({
                     chatId,
                     sender: senderId,
-                    content: text
+                    messageType,
+                    fileName:fileName,
+                    fileUrl:fileUrl,
+                    fileSize:fileSize,
+                    content: text || ""
                 });
                 const populatedMessage = await Message.findById(message._id)
                     .populate("sender", "name email");
