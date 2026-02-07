@@ -9,7 +9,8 @@ const createOrGetChat = async (req, res) => {
         const { userId } = req.body; //other person userId (OTHER)
         const myId = req.user.id; //logged user id (ME)
         let chat = await Chat.findOne({
-            members: { $all: [myId, userId] }
+            members: { $all: [myId, userId] },
+            isGroup: { $ne: true }
         });
         if (!chat) {
             chat = await Chat.create({
