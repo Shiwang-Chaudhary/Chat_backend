@@ -15,6 +15,7 @@ const initSocket = async (server) => {
 
         //JOINING ROOM
         socket.on("joinroom", async (chatId) => {
+            console.log("Join room called")
             try {
                 const userId = socket.user.id;
                 const chat = await Chat.findById(chatId);
@@ -46,19 +47,23 @@ const initSocket = async (server) => {
                 if (messageType==="text" && !text) {
                     return socket.emit("message_error", "Text message cannot be empty");
                 }
-                if (messageType==="file" && (!fileSize || !fileUrl)) {
+                console.log("1st condition clear ✅✅")
+                if (messageType!== "text" && (!fileSize || !fileUrl)) {
                     return socket.emit("message_error", "File URL and File Size are required for file messages");
                 }
+                console.log("2nd condition clear ✅✅")
                 const chat = await Chat.findById(chatId);
                 if (!chat) {
                     console.log("Chat error");
                     return socket.emit('chat_error', 'Chat not found');
                 }
+                console.log("3rd condition clear ✅✅")
                 const isMember = chat.members.some((member) => member.toString() === senderId.toString());
                 if (!isMember) {
                     console.log("Member error");
                     return socket.emit("member_error", "member not found");
                 }
+                console.log("4th condition clear ✅✅")
                 const message = await Message.create({
                     chatId,
                     sender: senderId,
@@ -68,10 +73,12 @@ const initSocket = async (server) => {
                     fileSize:fileSize,
                     content: text || ""
                 });
+                console.log("5th condition clear ✅✅")
                 const populatedMessage = await Message.findById(message._id)
-                    .populate("sender", "name email");
+                .populate("sender", "name email");
                 //EMITTING MESSAGE
                 io.to(chatId).emit("receiveMessage", populatedMessage);
+                console.log("6th condition clear ✅✅")
                 console.log("SOCKET.USER.name: ", socket.user.name);
 
             } catch (error) {

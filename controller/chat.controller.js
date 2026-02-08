@@ -73,7 +73,7 @@ const getMessage = async (req, res) => {
     try {
         const { chatId } = req.params;
         const messages = await Message.find({ chatId }).populate("sender", "name email");
-        console.log("Message schema",messages);
+        // console.log("Message schema",messages);
         return res.status(200).json({
             message: "Messages fetched",
             data: messages
