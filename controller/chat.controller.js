@@ -28,11 +28,13 @@ const createGroupChat = async (req, res) => {
     console.log("createGroupChat API HIT ✅✅");
     try {
         const { name, members } = req.body;
-        if (!name || !members || members.length < 2) {
+        console.log("1st debug clear ✅✅")
+        if (!name || !members || members.length < 1) {
             return res.status(400).json({
                 message: "Group name and at least 2 members required"
             });
         }
+        console.log("2nd debug clear ✅✅")
         const myId = req.user.id;
         const allMembers = [...new Set([...members, myId])];
         const objectIds = allMembers.map(id => new mongoose.Types.ObjectId(id));
@@ -42,7 +44,9 @@ const createGroupChat = async (req, res) => {
             admin: new mongoose.Types.ObjectId(myId),
             members: objectIds
         });
+        console.log("3rd debug clear ✅✅")
         const responseData = await Chat.findById(chat._id).populate("members", "name");
+        console.log("4th debug clear ✅✅")
         return res.status(200).json({ message: "Group created successfully ✅✅", data: responseData });
     } catch (error) {
         console.log(`Something went wrong: ${error}`);
@@ -63,8 +67,8 @@ const sendMessage = async (req, res) => {
         });
         return res.status(200).json({ message: "Message sent successfully. ✅✅", data: message });
     } catch (error) {
-        res.status(500).json({ message: "Something went wrong.❌❌" });
         console.error("SENDMESSAGE error:", error);
+        return res.status(500).json({ message: "Something went wrong.❌❌" });
     }
 };
 
@@ -83,6 +87,68 @@ const getMessage = async (req, res) => {
         return res.status(500).json({ message: "Something went wrong❌❌" });
     }
 };
+
+const addMembers = async (req, res) => {
+    console.log("ADD MEMBER API HIT ✅✅");
+    try {
+        const { chatId, members } = req.body;
+        if (!members && !chatId) {
+            return res.status(400).json({ message: "Please select atleast one member" });
+        }
+        const updatedChat = await Chat.findByIdAndUpdate(chatId,
+            { $addToSet: { members } }, { new: true }
+        ).populate("members", "name email");
+
+        return res.status(200).json({
+            data: updatedChat,
+            message: "Member added successfully ✅✅"
+        });
+    } catch (error) {
+        return res.status(500).json({ message: `Something went wring: ${error}` });
+    }
+}
+
+const removeMember = async (req, res) => {
+    console.log("REMOVE MEMBER API HIT ✅✅");
+    try {
+        const { chatId, memberId } = req.body;
+        if (!chatId || !memberId) {
+            return res.status(400).json({ message: "Both chatId and memberId are required" });
+        }
+        const chat = await Chat.findById(chatId);
+        if (!chat) {
+            return res.status(404).json({ message: "Chat not found ❌❌" });
+        }
+        if (chat.admin.toString() !== req.user.id) {
+            return res.status(403).json({
+                message: "Only admin can remove members ❌",
+            });
+        }
+        if (chat.admin.toString() === memberId) {
+            return res.status(400).json({
+                message: "Admin cannot remove himself ❌",
+            });
+        }
+        if (!chat.members.includes(memberId)) {
+            return res.status(400).json({
+                message: "User is not a member of this group ❌",
+            });
+        }
+        const updatedChat = await Chat.findByIdAndUpdate(chatId,
+            {
+                $pull: { members: memberId }
+            }
+        );
+        return res.status(200).json({
+            message: "Member removed successfully ✅",
+            data: updatedChat,
+        });
+
+    } catch (error) {
+        console.log(`Error in removing member: ${error}`);
+        return res.status(500).json({ message: `Something went wring: ${error}` });
+    }
+}
 
 const getAllChats = async (req, res) => {
     console.log("GET ALL CHATS API HIT ✅✅");
@@ -146,8 +212,10 @@ const searchgroups = async (req, res) => {
             members: myId,
             name: { $regex: `^${query}`, $options: "i" }
         }).populate("admin", "name email").sort({ updatedAt: -1 });
-        res.status(200).json({message: "Users fetched",
-            data: groups});
+        res.status(200).json({
+            message: "Users fetched",
+            data: groups
+        });
     } catch (error) {
         console.error("SEARCH USERS error:", error);
         return res.status(500).json({ message: "Something went wrong.❌❌" });
@@ -155,4 +223,4 @@ const searchgroups = async (req, res) => {
 
 }
 
-module.exports = { createOrGetChat, sendMessage, getMessage, getAllChats, searchUsers, createGroupChat, searchgroups };
+module.exports = { createOrGetChat, sendMessage, getMessage, getAllChats, searchUsers, createGroupChat, searchgroups, addMembers, removeMember };
