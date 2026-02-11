@@ -8,6 +8,7 @@ const server = http.createServer(app);
 const authRoutes = require("./routes/auth.routes");
 const connectDB = require("./conifg/dbConnection");
 const chatRoutes = require("./routes/chat.routes");
+const locationRoutes = require("./routes/location.routes");
 const initSocket = require("./conifg/socket"); 
 require('dotenv').config();
 
@@ -20,6 +21,7 @@ app.get("/", (req, res) => {
 });
 app.use("/auth", authRoutes);
 app.use('/chat', chatRoutes);
+app.use("location",locationRoutes);
 
 initSocket(server);
 // io.on("connection", (socket) => {

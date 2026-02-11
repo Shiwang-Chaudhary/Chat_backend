@@ -2,6 +2,7 @@ const { Server } = require("socket.io");
 const socketMiddleware = require("../middleware/socket.middleware");
 const Chat = require("../modles/chat.model");
 const Message = require("../modles/message.model");
+const Location = require("../modles/location.model");
 
 //INITIALIZING SOCKET
 const initSocket = async (server) => {
@@ -44,11 +45,11 @@ const initSocket = async (server) => {
             try {
                 const { chatId, text, messageType, fileName, fileUrl, fileSize } = data;
                 const senderId = socket.user.id;
-                if (messageType==="text" && !text) {
+                if (messageType === "text" && !text) {
                     return socket.emit("message_error", "Text message cannot be empty");
                 }
                 console.log("1st condition clear ✅✅")
-                if (messageType!== "text" && (!fileSize || !fileUrl)) {
+                if (messageType !== "text" && (!fileSize || !fileUrl)) {
                     return socket.emit("message_error", "File URL and File Size are required for file messages");
                 }
                 console.log("2nd condition clear ✅✅")
@@ -68,14 +69,14 @@ const initSocket = async (server) => {
                     chatId,
                     sender: senderId,
                     messageType,
-                    fileName:fileName,
-                    fileUrl:fileUrl,
-                    fileSize:fileSize,
+                    fileName: fileName,
+                    fileUrl: fileUrl,
+                    fileSize: fileSize,
                     content: text || ""
                 });
                 console.log("5th condition clear ✅✅")
                 const populatedMessage = await Message.findById(message._id)
-                .populate("sender", "name email");
+                    .populate("sender", "name email");
                 //EMITTING MESSAGE
                 io.to(chatId).emit("receiveMessage", populatedMessage);
                 console.log("6th condition clear ✅✅")
@@ -83,11 +84,49 @@ const initSocket = async (server) => {
 
             } catch (error) {
                 console.log("Error in sending message: " + error.message);
-                socket.emit("message_error", "Message sending failed: " + error.message);
+                return socket.emit("message_error", "Message sending failed: " + error.message);
             }
 
-        })
+        });
 
+        socket.on("updateLocation", async (data) => {
+            try {
+                const userId = socket.user.id;3
+                await Location.findByIdAndUpdate(
+                    { user: userId },
+                    { longitude: data.longitude, latitude: data.latitude },
+                    { upsert: true, new: true });
+                console.log("📍 Location updated:", userId);
+
+                //Only broadcast the location to friends which you have chatted with (personal chat only).
+                const chats = await Chat.find({ isGroup: false, members: userId });
+                if (!chats) {
+                    return socket.emit("location-error", "Chat not found for user");
+                }
+                let friendIds = new Set();
+                //extract memberId(friendId) from chatModel
+                chats.forEach((chat) => {
+                    chat.members.forEach((m) => {
+                        if (m._id.toString() !== userId) {
+                            friendIds.add(m._id);
+                        }
+                    });
+                });
+                //send the location update to the friend
+                friendIds.forEach((fid) => {
+                    io.to(fid).emit("friendLocationUpdate", {
+                        user: userId,
+                        longitude: data.longitude,
+                        latitude: data.latitude,
+                    });
+                });
+                console.log("📡 Location broadcasted to friends:", friendIds.size);
+
+            } catch (error) {
+                console.log("❌ Error in updateLocation:", error.message);
+
+            }
+        });
 
         socket.on("disconnect", () => {
             console.log("User disconnected:", socket.id);
