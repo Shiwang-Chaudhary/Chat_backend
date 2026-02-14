@@ -17,6 +17,8 @@ const initSocket = async (server) => {
     const userId = socket.user.id;
     console.log("👤 User ID:", userId);
     socket.join(userId);
+    console.log("🏠 Rooms of", userId, "=>", socket.rooms);
+
 
         //JOINING ROOM
         socket.on("joinroom", async (chatId) => {
