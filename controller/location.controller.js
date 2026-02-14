@@ -1,5 +1,5 @@
 const Chat = require("../modles/chat.model");
-
+const Location = require("../modles/location.model");
 const getFriendlocation = async (req, res) => {
     try {
         const myId = req.user.id;
@@ -7,7 +7,7 @@ const getFriendlocation = async (req, res) => {
             isGroup: false,
             members: myId
         }).populate("members", "name");
-        console.log("GetFriendLocation chat:", chat);
+        console.log("GetFriendLocation chat:", chats);
         let friendIds = new Set();
         chats.forEach((chat) => {
             chat.members.forEach((m) => {
@@ -17,13 +17,14 @@ const getFriendlocation = async (req, res) => {
             });
         });
         console.log("Friends IDs:", friendIds);
-        const location = Location.find({
+        const location = await Location.find({
             user: { $in: Array.from(friendIds) }
         }).populate("user", "name");
-
+        console.log("GetFriendLocation locations:", location);
         return res.status(200).json({message:"Location fetched successfully",data:location});
     } catch (error) {
-
+        console.error("GetFriendLocation error:", error);
+        return res.status(500).json({ message: "Something went wrong.❌❌" });
     }
 }
 module.exports = { getFriendlocation };

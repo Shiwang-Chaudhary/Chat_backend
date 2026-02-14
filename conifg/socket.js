@@ -92,7 +92,7 @@ const initSocket = async (server) => {
         socket.on("updateLocation", async (data) => {
             try {
                 const userId = socket.user.id;3
-                await Location.findByIdAndUpdate(
+                await Location.findOneAndUpdate(
                     { user: userId },
                     { longitude: data.longitude, latitude: data.latitude },
                     { upsert: true, new: true });

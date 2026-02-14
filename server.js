@@ -21,7 +21,7 @@ app.get("/", (req, res) => {
 });
 app.use("/auth", authRoutes);
 app.use('/chat', chatRoutes);
-app.use("location",locationRoutes);
+app.use("/location",locationRoutes);
 
 initSocket(server);
 // io.on("connection", (socket) => {
