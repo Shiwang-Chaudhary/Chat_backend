@@ -7,17 +7,17 @@ const Location = require("../modles/location.model");
 //INITIALIZING SOCKET
 const initSocket = async (server) => {
     const io = new Server(server, { cors: { origin: "*" } });
-    
+
 
     io.use(socketMiddleware);
 
     //CONNECTING USER
     io.on("connection", (socket) => {
         console.log("User connected:", socket.id);
-    const userId = socket.user.id;
-    console.log("👤 User ID:", userId);
-    socket.join(userId);
-    console.log("🏠 Rooms of", userId, "=>", socket.rooms);
+        const userId = socket.user.id;
+        console.log("👤 User ID:", userId);
+        socket.join(userId);
+        console.log("🏠 Rooms of", userId, "=>", socket.rooms);
 
 
         //JOINING ROOM
@@ -113,8 +113,10 @@ const initSocket = async (server) => {
                 //extract memberId(friendId) from chatModel
                 chats.forEach((chat) => {
                     chat.members.forEach((m) => {
-                        if (m._id.toString() !== userId) {
-                            friendIds.add(m._id);
+                        const fid = m.toString(); // ✅ force string
+
+                        if (fid !== userId.toString()) {
+                            friendIds.add(fid);
                         }
                     });
                 });
