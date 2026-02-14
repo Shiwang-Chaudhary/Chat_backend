@@ -7,12 +7,16 @@ const Location = require("../modles/location.model");
 //INITIALIZING SOCKET
 const initSocket = async (server) => {
     const io = new Server(server, { cors: { origin: "*" } });
+    
 
     io.use(socketMiddleware);
 
     //CONNECTING USER
     io.on("connection", (socket) => {
         console.log("User connected:", socket.id);
+    const userId = socket.user.id;
+    console.log("👤 User ID:", userId);
+    socket.join(userId);
 
         //JOINING ROOM
         socket.on("joinroom", async (chatId) => {
@@ -91,7 +95,7 @@ const initSocket = async (server) => {
 
         socket.on("updateLocation", async (data) => {
             try {
-                const userId = socket.user.id;3
+                const userId = socket.user.id;
                 await Location.findOneAndUpdate(
                     { user: userId },
                     { longitude: data.longitude, latitude: data.latitude },
