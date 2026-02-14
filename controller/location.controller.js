@@ -16,11 +16,11 @@ const getFriendlocation = async (req, res) => {
                 }
             });
         });
-        console.log("Friends IDs:", friendIds);
+        // console.log("Friends IDs:", friendIds);
         const location = await Location.find({
             user: { $in: Array.from(friendIds) }
         }).populate("user", "name");
-        console.log("GetFriendLocation locations:", location);
+        // console.log("GetFriendLocation locations:", location);
         return res.status(200).json({message:"Location fetched successfully",data:location});
     } catch (error) {
         console.error("GetFriendLocation error:", error);
