@@ -7,12 +7,13 @@ const getFriendlocation = async (req, res) => {
             isGroup: false,
             members: myId
         }).populate("members", "name");
-        console.log("GetFriendLocation chat:", chats);
+        // console.log("GetFriendLocation chat:", chats);
         let friendIds = new Set();
         chats.forEach((chat) => {
             chat.members.forEach((m) => {
                 if (m._id.toString() !== myId) {
-                    friendIds.add(m._id.toString());
+                    const fid = m._id.toString(); // ✅ force string
+                    friendIds.add(fid);
                 }
             });
         });

@@ -97,18 +97,21 @@ const initSocket = async (server) => {
 
         socket.on("updateLocation", async (data) => {
             try {
+                console.log("CHECK 1 ✅✅")
                 const userId = socket.user.id;
                 await Location.findOneAndUpdate(
                     { user: userId },
                     { longitude: data.longitude, latitude: data.latitude },
                     { upsert: true, new: true });
                 console.log("📍 Location updated:", userId);
+                console.log("CHECK 2 ✅✅")
 
                 //Only broadcast the location to friends which you have chatted with (personal chat only).
                 const chats = await Chat.find({ isGroup: false, members: userId });
                 if (!chats) {
                     return socket.emit("location-error", "Chat not found for user");
                 }
+                console.log("CHECK 3 ✅✅")
                 let friendIds = new Set();
                 //extract memberId(friendId) from chatModel
                 chats.forEach((chat) => {
@@ -120,14 +123,19 @@ const initSocket = async (server) => {
                         }
                     });
                 });
+                console.log("CHECK 4 ✅✅")
                 //send the location update to the friend
                 friendIds.forEach((fid) => {
                     io.to(fid).emit("friendLocationUpdate", {
-                        user: userId,
+                        user: {
+                            _id: userId,
+                            name: socket.user.name, // ✅ name from JWT
+                        },
                         longitude: data.longitude,
                         latitude: data.latitude,
                     });
                 });
+                console.log("CHECK 5 ✅✅")
                 console.log("📡 Location broadcasted to friends:", friendIds.size);
 
             } catch (error) {
