@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const {createOrGetChat, sendMessage, getMessage, getAllChats, searchUsers, createGroupChat, searchgroups, addMembers, removeMember} = require("../controller/chat.controller");
+const {createOrGetChat, sendMessage, getMessage, getAllChats, searchUsers, createGroupChat, searchgroups, addMembers, removeMember, deleteMessage} = require("../controller/chat.controller");
 const authMiddleware = require("../middleware/auth.middlware");
 
 router.post("/createOrGet", authMiddleware, createOrGetChat);
@@ -12,5 +12,6 @@ router.post("/createGroupChat",authMiddleware, createGroupChat);
 router.get("/searchGroups",authMiddleware, searchgroups);
 router.patch("/addMembers",authMiddleware, addMembers);
 router.delete("/removeMember",authMiddleware, removeMember);
+router.delete("/deleteMessages", authMiddleware, deleteMessage);
 
 module.exports = router;

@@ -87,7 +87,19 @@ const getMessage = async (req, res) => {
         return res.status(500).json({ message: "Something went wrong❌❌" });
     }
 };
-
+const deleteMessage = async(req,res)=>{
+    try {
+        const {messageIds} = req.body;
+        if (!messageIds || messageIds.length === 0) {
+            return res.status(400).json({ message: "No message IDs provided" });
+        }
+        const deletedMessageData = await Message.deleteMany({ _id: { $in: messageIds } });
+        return res.status(200).json({ message: "Messages deleted successfully", data: deletedMessageData });
+    } catch (error) {
+        console.error("DELETEMESSAGE error:", error);
+        return res.status(500).json({ message: "Something went wrong❌❌" });
+    }
+}
 const addMembers = async (req, res) => {
     console.log("ADD MEMBER API HIT ✅✅");
     try {
@@ -223,4 +235,4 @@ const searchgroups = async (req, res) => {
 
 }
 
-module.exports = { createOrGetChat, sendMessage, getMessage, getAllChats, searchUsers, createGroupChat, searchgroups, addMembers, removeMember };
+module.exports = { createOrGetChat, sendMessage, getMessage, getAllChats, searchUsers, createGroupChat, searchgroups, addMembers, removeMember, deleteMessage };
