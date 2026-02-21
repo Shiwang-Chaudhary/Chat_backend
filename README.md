@@ -34,4 +34,61 @@ This backend works together with the Flutter frontend application.
 ---
 
 ## 📂 Project Structure
+Chat_backend/
+│── config/
+│ ├── dbConnection.js # MongoDB connection setup
+│ └── socket.js # Socket.IO configuration
+│
+│── controller/
+│ ├── auth.controller.js # Login/Register logic
+│ ├── chat.controller.js # Chat message handling
+│ └── location.controller.js# Location update logic
+│
+│── middleware/
+│ ├── auth.middleware.js # JWT authentication middleware
+│ └── socket.middleware.js # Socket authentication middleware
+│
+│── models/
+│ ├── user.model.js # User schema
+│ ├── message.model.js # Message schema
+│ ├── chat.model.js # Chat schema
+│ └── location.model.js # Location schema
+│
+│── routes/
+│ ├── auth.routes.js # Auth routes
+│ ├── chat.routes.js # Chat routes
+│ └── location.routes.js # Location routes
+│
+│── server.js # Main server entry point
+│── .env # ADD THIS FILE ACCORDING TO YOUR KEYS
+│── package.json
+│── README.md
+
+## ⚙️ Setup Instructions
+
+### 1. Clone the Repository
+
+git clone https://github.com/Shiwang-Chaudhary/Chat_backend.git
+cd Chat_backend
+
+### 2. Install Dependencies
+npm install
+
+### 3. Configure Environment Variables
+Create a .env file in the root directory:
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_secret_key
+
+### 4. Run the Server
+node server.js
+//SERVER WILL RUN AT PORT 3000
+
+## Frontend Repository
+
+Flutter frontend for this backend:
+
+ https://github.com/Shiwang-Chaudhary/Chat_frontend
+
+
+
 
