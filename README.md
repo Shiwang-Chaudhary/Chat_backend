@@ -35,7 +35,8 @@ This backend works together with the Flutter frontend application.
 
 ## 📂 Project Structure
 Chat_backend/
-│── config/
+│── 
+config/
 │ ├── dbConnection.js # MongoDB connection setup
 │ └── socket.js # Socket.IO configuration
 │
